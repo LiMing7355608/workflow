@@ -1,0 +1,17 @@
+node_modules/
+runs/
+*.log
+.DS_Store
+# 测试目录不上传（本地保留）
+test/
+
+# 构建产物与本地配置
+dist/
+.env
+
+# 工作流产物目录，只保留说明文件
+workspace/*
+!workspace/README.md
+
+# IDE 配置
+.idea/

@@ -1,0 +1,24 @@
+{
+  "name": "workflow-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "多 Agent 工作流 MVP：把 PlayfulCode Agent 与外部 CLI Agent 编排成可追踪的流水线",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/copy-public.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test \"test/*.test.js\"",
+    "start": "node dist/cli.js",
+    "demo": "node dist/cli.js run workflows/code-review.json",
+    "demo:mock": "node dist/cli.js run workflows/code-review.json --mock",
+    "web": "node dist/cli.js web workflows"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

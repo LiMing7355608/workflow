@@ -1,0 +1,87 @@
+{
+  "name": "code-review",
+  "description": "静态扫描 → 质量/安全双路并行审查 → 汇总报告。前一步的产出通过黑板传给下一步，两个审查 Agent 互不可见、只共享扫描结果。",
+  "workdir": "../src",
+  "defaults": {
+    "config": {
+      "tools": "review"
+    },
+    "retry": {
+      "attempts": 2,
+      "delayMs": 800,
+      "backoff": true
+    }
+  },
+  "input": {
+    "标准": "对外交付代码，需可维护、可读"
+  },
+  "nodes": [
+    {
+      "id": "scan",
+      "agent": "fn:scan",
+      "config": {
+        "target": "."
+      },
+      "ui": {
+        "x": 60,
+        "y": 44
+      }
+    },
+    {
+      "id": "quality",
+      "agent": "claude",
+      "dependsOn": [
+        "scan"
+      ],
+      "when": {
+        "path": "scan.data.findings.length",
+        "op": "gt",
+        "value": 0
+      },
+      "systemPrompt": "你是一名资深代码质量审查员，只关注可读性、可维护性与潜在缺陷，不评价安全性。调查要克制：够用即停。",
+      "prompt": "静态扫描的原始结果如下：\n\n{{scan.text}}\n\n请抽查其中严重度最高的 3 条问题所在文件，确认扫描结论是否属实（允许推翻误报）。**整个调查最多调用 4 次工具，之后必须直接给出结论。**\n\n输出要求：\n1. 按严重度列出 3-5 条确认过的问题，格式为「文件:行号 — 问题 — 修复建议」；\n2. 单独列出一段「误报」；\n3. 不要修改任何文件。",
+      "maxSteps": 16,
+      "ui": {
+        "x": 344,
+        "y": -27
+      }
+    },
+    {
+      "id": "security",
+      "agent": "dsh",
+      "dependsOn": [
+        "scan"
+      ],
+      "when": {
+        "path": "scan.data.findings.length",
+        "op": "gt",
+        "value": 0
+      },
+      "systemPrompt": "你是一名应用安全审查员，只关注注入、越权、路径穿越、敏感信息泄露、命令执行等风险。调查要克制：够用即停。",
+      "prompt": "静态扫描的原始结果如下：\n\n{{scan.text}}\n\n请判断其中有哪些条目构成真实的安全风险，并补充扫描规则没覆盖到的问题（重点看路径校验、子进程执行、文件写入这类危险面）。**整个调查最多调用 4 次工具，之后必须直接给出结论。**\n\n输出要求：\n1. 真实风险按「文件:行号 — 攻击路径 — 建议」列出，最多 5 条；\n2. 若没有真实安全风险，明确写「未发现可利用的安全风险」；\n3. 不要修改任何文件。",
+      "maxSteps": 16,
+      "ui": {
+        "x": 335,
+        "y": 173
+      }
+    },
+    {
+      "id": "report",
+      "agent": "playfulcode",
+      "dependsOn": [
+        "quality",
+        "security"
+      ],
+      "config": {
+        "tools": "none"
+      },
+      "systemPrompt": "你是一名技术负责人，负责把多路审查意见合并成一份可直接发给团队的报告。只做归纳，不要再去查代码。",
+      "prompt": "请把下面两份审查意见合并成一份 Markdown 报告。\n\n## 静态扫描\n{{scan.text}}\n\n## 质量审查\n{{quality.text}}\n\n## 安全审查\n{{security.text}}\n\n合并规则：\n- 去重：同一处问题只出现一次，保留更严重的判断；\n- 冲突：两份意见矛盾时，说明分歧并给出你的结论；\n- 输出结构：概览（一句话结论 + 风险等级）→ 必须修复 → 建议改进 → 误报说明；\n- 面向读者的标准：{{input.标准}}。\n- 不要修改任何文件。",
+      "maxSteps": 4,
+      "ui": {
+        "x": 671,
+        "y": 48
+      }
+    }
+  ]
+}

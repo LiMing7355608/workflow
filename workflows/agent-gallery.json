@@ -1,0 +1,162 @@
+{
+  "name": "agent-gallery",
+  "description": "Agent 标识一览：11 个节点各用一个 Agent，只为在画布上查看标识与可用性。默认全部跳过（条件不满足），不会真的调用任何模型；把 input.允许运行 设成任意值才会执行。",
+  "workdir": "../src",
+  "input": {},
+  "nodes": [
+    {
+      "id": "n0",
+      "agent": "playfulcode",
+      "dependsOn": [],
+      "when": {
+        "path": "input.允许运行",
+        "op": "exists"
+      },
+      "prompt": "只回复四个字：连接成功",
+      "ui": {
+        "x": 60,
+        "y": 40
+      }
+    },
+    {
+      "id": "n1",
+      "agent": "claude",
+      "dependsOn": [],
+      "when": {
+        "path": "input.允许运行",
+        "op": "exists"
+      },
+      "prompt": "只回复四个字：连接成功",
+      "ui": {
+        "x": 360,
+        "y": 40
+      }
+    },
+    {
+      "id": "n2",
+      "agent": "dsh",
+      "dependsOn": [],
+      "when": {
+        "path": "input.允许运行",
+        "op": "exists"
+      },
+      "prompt": "只回复四个字：连接成功",
+      "ui": {
+        "x": 660,
+        "y": 40
+      }
+    },
+    {
+      "id": "n3",
+      "agent": "codex",
+      "dependsOn": [],
+      "when": {
+        "path": "input.允许运行",
+        "op": "exists"
+      },
+      "prompt": "只回复四个字：连接成功",
+      "ui": {
+        "x": 60,
+        "y": 170
+      }
+    },
+    {
+      "id": "n4",
+      "agent": "opencode",
+      "dependsOn": [],
+      "when": {
+        "path": "input.允许运行",
+        "op": "exists"
+      },
+      "prompt": "只回复四个字：连接成功",
+      "ui": {
+        "x": 360,
+        "y": 170
+      }
+    },
+    {
+      "id": "n5",
+      "agent": "qoder",
+      "dependsOn": [],
+      "when": {
+        "path": "input.允许运行",
+        "op": "exists"
+      },
+      "prompt": "只回复四个字：连接成功",
+      "ui": {
+        "x": 660,
+        "y": 170
+      }
+    },
+    {
+      "id": "n6",
+      "agent": "workbuddy",
+      "dependsOn": [],
+      "when": {
+        "path": "input.允许运行",
+        "op": "exists"
+      },
+      "prompt": "只回复四个字：连接成功",
+      "ui": {
+        "x": 60,
+        "y": 300
+      }
+    },
+    {
+      "id": "n7",
+      "agent": "trae",
+      "dependsOn": [],
+      "when": {
+        "path": "input.允许运行",
+        "op": "exists"
+      },
+      "prompt": "只回复四个字：连接成功",
+      "ui": {
+        "x": 360,
+        "y": 300
+      }
+    },
+    {
+      "id": "n8",
+      "agent": "zcode",
+      "dependsOn": [],
+      "when": {
+        "path": "input.允许运行",
+        "op": "exists"
+      },
+      "prompt": "只回复四个字：连接成功",
+      "ui": {
+        "x": 660,
+        "y": 300
+      }
+    },
+    {
+      "id": "n9",
+      "agent": "fn:scan",
+      "dependsOn": [],
+      "when": {
+        "path": "input.允许运行",
+        "op": "exists"
+      },
+      "prompt": "只回复四个字：连接成功",
+      "ui": {
+        "x": 60,
+        "y": 430
+      }
+    },
+    {
+      "id": "n10",
+      "agent": "mock",
+      "dependsOn": [],
+      "when": {
+        "path": "input.允许运行",
+        "op": "exists"
+      },
+      "prompt": "只回复四个字：连接成功",
+      "ui": {
+        "x": 360,
+        "y": 430
+      }
+    }
+  ]
+}

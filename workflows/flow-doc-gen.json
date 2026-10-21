@@ -1,0 +1,30 @@
+{
+  "name": "docgen",
+  "description": "代码 → 分析 → 文档。分析节点只读，文档节点写盘。默认分析本项目自己的 src。",
+  "workdir": "../src",
+  "defaults": {
+    "config": { "tools": "review" },
+    "retry": { "attempts": 2, "delayMs": 1500, "backoff": true }
+  },
+  "input": {
+    "读者": "第一次接手这个仓库的工程师"
+  },
+  "nodes": [
+    {
+      "id": "analyze",
+      "agent": "playfulcode",
+      "systemPrompt": "你是一名架构分析员。你只读代码，不做修改。",
+      "prompt": "分析当前工作目录里的代码，为写文档做准备。\n\n请先 list_files 看目录结构，再挑 6-10 个关键文件读。\n目标读者：{{input.读者}}。\n\n输出：\n1. 这个项目是做什么的（一句话）；\n2. 目录与模块职责表；\n3. 核心数据流（谁调用谁，按执行顺序）；\n4. 关键抽象与它们的契约；\n5. 新人最容易踩的 3 个坑。",
+      "maxSteps": 14
+    },
+    {
+      "id": "doc",
+      "agent": "playfulcode",
+      "dependsOn": ["analyze"],
+      "config": { "tools": "default" },
+      "systemPrompt": "你是一名技术文档作者。你只写文档，不改业务代码。",
+      "prompt": "基于下面的分析，写一份架构文档并保存为 `docs/ARCHITECTURE.md`。\n\n{{analyze.text}}\n\n要求：\n1. 面向 {{input.读者}}，代码片段要能直接对应到真实文件；\n2. 结构：做什么 → 怎么组织 → 数据流 → 关键契约 → 常见坑 → 扩展指引；\n3. 不要编造不存在的文件或函数；分析里没提到的，写「待补充」；\n4. 写完输出文件路径和字数。",
+      "maxSteps": 8
+    }
+  ]
+}

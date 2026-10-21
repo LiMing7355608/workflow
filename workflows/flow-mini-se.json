@@ -1,0 +1,38 @@
+{
+  "name": "mini-se",
+  "description": "Mini SE：一句话想法 → 需求规格 → 技术设计 → 可运行代码。需求与设计节点不碰文件，只有编码节点有写盘权限。",
+  "workdir": "../workspace",
+  "defaults": {
+    "config": { "tools": "none" },
+    "retry": { "attempts": 2, "delayMs": 1500, "backoff": true }
+  },
+  "input": {
+    "想法": "一个把 Markdown 文件转成纯文本的命令行小工具"
+  },
+  "nodes": [
+    {
+      "id": "requirement",
+      "agent": "playfulcode",
+      "systemPrompt": "你是一名产品经理。你只负责把模糊的想法变成可验收的需求，不做技术选型，也不写代码。",
+      "prompt": "把下面这个想法整理成需求规格：\n\n{{input.想法}}\n\n输出：\n1. 一句话定位；\n2. 用户故事（As a … I want … so that …），2-3 条；\n3. 验收标准，每条必须可被测；\n4. 明确的非目标（这次不做什么）。\n\n不确定的地方直接写假设，不要反问。",
+      "maxSteps": 3
+    },
+    {
+      "id": "design",
+      "agent": "playfulcode",
+      "dependsOn": ["requirement"],
+      "systemPrompt": "你是一名技术负责人。你只做设计，不写实现代码。",
+      "prompt": "基于下面的需求做技术设计：\n\n{{requirement.text}}\n\n输出：\n1. 模块划分与各自职责；\n2. 对外接口（函数签名 / CLI 参数 / 文件格式），写具体；\n3. 关键数据结构；\n4. 边界与错误处理策略；\n5. 目录结构。\n\n语言和运行环境：Node.js + TypeScript（无需引入第三方运行时依赖）。\n设计要小到能在一次编码里实现完。",
+      "maxSteps": 4
+    },
+    {
+      "id": "code",
+      "agent": "playfulcode",
+      "dependsOn": ["design"],
+      "config": { "tools": "default" },
+      "systemPrompt": "你是一名工程师。你按设计文档实现代码，写完要自检。",
+      "prompt": "按下面的设计实现代码，写入当前工作目录。\n\n## 设计\n{{design.text}}\n\n## 需求\n{{requirement.text}}\n\n要求：\n1. 严格按设计的目录结构与接口；\n2. 写完后用 run_code 至少跑一次 `npx tsc --noEmit` 或一个小用例自检；\n3. 最后输出：创建了哪些文件、怎么运行、自检结果。",
+      "maxSteps": 20
+    }
+  ]
+}

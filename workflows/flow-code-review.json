@@ -1,0 +1,53 @@
+{
+  "name": "code-review-fix",
+  "description": "编码 → 审查 → 修复。编码与修复用 PlayfulCode，审查用 Claude Code CLI——审查者与作者是两个不同平台的 Agent，避免自己审自己。",
+  "workdir": "../workspace",
+  "defaults": {
+    "retry": {
+      "attempts": 2,
+      "delayMs": 1500,
+      "backoff": true
+    }
+  },
+  "input": {
+    "任务": "实现一个 CSV 转 JSON 的函数，要求处理带引号字段和空行"
+  },
+  "nodes": [
+    {
+      "id": "code",
+      "agent": "playfulcode",
+      "config": {
+        "tools": "default"
+      },
+      "systemPrompt": "你是一名工程师，负责实现功能。先读现有代码再动手，不要覆盖无关文件。",
+      "prompt": "在当前工作目录实现：\n\n{{input.任务}}\n\n要求：\n1. 先 list_files / read_file 看看目录里已有什么；\n2. 实现并补一个最小可运行的用例；\n3. 输出：改了哪些文件、导出什么函数、用例怎么跑。",
+      "maxSteps": 18
+    },
+    {
+      "id": "review",
+      "agent": "claude",
+      "dependsOn": [
+        "code"
+      ],
+      "config": {
+        "allowedTools": "Read,Glob,Grep"
+      },
+      "systemPrompt": "你是一名严格的代码审查者。你不修改代码，只指出问题。",
+      "prompt": "上一步的实现者报告如下：\n\n{{code.text}}\n\n请用 Read/Grep 实际读一遍它写的代码，然后审查。\n最多读 6 个文件，然后必须给结论。\n\n输出：\n1. 阻断级问题（会导致错误结果 / 崩溃 / 数据损坏），每条给 `文件:行号` 和复现方式；\n2. 建议级问题；\n3. 一句话结论：可以合并 / 需要修改。",
+      "maxSteps": 8
+    },
+    {
+      "id": "fix",
+      "agent": "playfulcode",
+      "dependsOn": [
+        "review"
+      ],
+      "config": {
+        "tools": "default"
+      },
+      "systemPrompt": "你是一名工程师，负责按审查意见修复问题。只改必要的地方。",
+      "prompt": "审查意见如下：\n\n{{review.text}}\n\n请修复其中的阻断级问题，然后：\n1. 重新跑一次用例确认通过；\n2. 输出：每一条审查意见对应的处理结果（已修复 / 认为不成立，并说明理由）。",
+      "maxSteps": 16
+    }
+  ]
+}

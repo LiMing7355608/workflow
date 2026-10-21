@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Workflow 编排</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="toolbar">
+    <div class="brand">Workflow</div>
+
+    <select id="file" title="工作流"></select>
+    <button id="new" class="ghost" title="新建节点">+ 节点</button>
+    <button id="layout" class="ghost" title="按依赖深度重新排布">自动排布</button>
+
+    <div class="spacer"></div>
+
+    <label class="check"><input type="checkbox" id="mock" checked /> 模拟运行</label>
+    <button id="save" class="ghost">保存</button>
+    <button id="run" class="primary">▶ 运行</button>
+    <span id="dirty" class="dirty" hidden>未保存</span>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <main>
+    <section class="canvas-wrap">
+      <svg id="canvas">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" class="arrow-head" />
+          </marker>
+        </defs>
+        <g id="viewport"></g>
+      </svg>
+      <div class="hint">
+        <span class="legend"><b class="k-running"></b>运行中</span>
+        <span class="legend"><b class="k-ok"></b>完成</span>
+        <span class="legend"><b class="k-failed"></b>失败</span>
+        <span class="legend"><b class="k-skipped"></b>跳过</span>
+        <em>拖节点移动 · 右侧圆点拖到另一节点建立依赖 · 点连线删除 · 滚轮缩放</em>
+      </div>
+    </section>
+
+    <aside id="panel" class="panel">
+      <div class="empty">选中一个节点以编辑</div>
+    </aside>
+  </main>
+
+  <footer class="log-wrap">
+    <div class="log-head">
+      <span>运行日志</span>
+      <span id="usage" class="usage"></span>
+      <button id="clear" class="ghost tiny">清空</button>
+    </div>
+    <div id="log" class="log"></div>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

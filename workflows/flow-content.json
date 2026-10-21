@@ -1,0 +1,39 @@
+{
+  "name": "content",
+  "description": "主题 → 大纲 → 内容 → 审校。三个节点都不挂工具，纯文本流水线；审校用 Claude Code，与写作 Agent 分属不同平台。",
+  "workdir": "../workspace",
+  "defaults": {
+    "config": { "tools": "none" },
+    "retry": { "attempts": 2, "delayMs": 1000, "backoff": true }
+  },
+  "input": {
+    "主题": "为什么多 Agent 协作需要显式的共享状态，而不是把上一步的输出拼进提示词",
+    "篇幅": "1200 字左右",
+    "读者": "有工程背景但不熟悉 Agent 框架的开发者"
+  },
+  "nodes": [
+    {
+      "id": "outline",
+      "agent": "playfulcode",
+      "systemPrompt": "你是一名内容策划。你只出结构，不写正文。",
+      "prompt": "主题：{{input.主题}}\n目标读者：{{input.读者}}\n篇幅：{{input.篇幅}}\n\n输出大纲：\n1. 一句话核心论点（要有立场，不要「两者各有优劣」这种废话）；\n2. 3-5 个分论点，每个写清楚它要回答读者的什么疑问；\n3. 每个分论点配一个具体的例子方向（不要展开写）；\n4. 开头钩子和结尾落点各一句。",
+      "maxSteps": 3
+    },
+    {
+      "id": "draft",
+      "agent": "playfulcode",
+      "dependsOn": ["outline"],
+      "systemPrompt": "你是一名技术写作者。文风克制、具体，不说空话。",
+      "prompt": "按下面的大纲写正文。\n\n{{outline.text}}\n\n要求：\n- 目标读者：{{input.读者}}；篇幅：{{input.篇幅}}；\n- 每段只讲一件事，段首句就是结论；\n- 至少给一个能跑通的代码片段或具体场景；\n- 不用「赋能」「闭环」「抓手」这类词；\n- 直接输出 Markdown 正文，不要写「以下是正文」。",
+      "maxSteps": 3
+    },
+    {
+      "id": "review",
+      "agent": "claude",
+      "dependsOn": ["draft"],
+      "systemPrompt": "你是一名严格的技术编辑。你关注事实正确性、逻辑断裂和读者体验，不做无意义的润色。",
+      "prompt": "请审校下面这篇稿子。\n\n{{draft.text}}\n\n审校维度：\n1. **事实**：有没有说错的技术判断？逐条指出；\n2. **逻辑**：论证有没有跳跃、有没有和核心论点冲突的段落；\n3. **读者**：作为 {{input.读者}}，哪里会看不懂或觉得被糊弄；\n4. **删减**：哪一段可以整段删掉而不损失信息。\n\n输出两部分：\n- 「问题清单」：逐条，标明段落位置；\n- 「修订版全文」：直接给改好的 Markdown。",
+      "maxSteps": 4
+    }
+  ]
+}

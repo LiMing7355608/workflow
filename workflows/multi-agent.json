@@ -1,0 +1,55 @@
+{
+  "name": "multi-agent",
+  "description": "跨平台协作：确定性扫描 → Claude Code CLI 审查 → PlayfulCode(DeepSeek) 汇总。三个节点背后是三种完全不同的运行时，引擎不关心区别。",
+  "workdir": "../src",
+  "defaults": {
+    "retry": {
+      "attempts": 2,
+      "delayMs": 1000,
+      "backoff": true
+    }
+  },
+  "input": {
+    "目标": "判断这些告警里哪些是真问题"
+  },
+  "nodes": [
+    {
+      "id": "scan",
+      "agent": "fn:scan",
+      "config": {
+        "target": "."
+      }
+    },
+    {
+      "id": "claude",
+      "agent": "claude",
+      "dependsOn": [
+        "scan"
+      ],
+      "when": {
+        "path": "scan.data.findings.length",
+        "op": "gt",
+        "value": 0
+      },
+      "prompt": "你在一个代码审查流水线里。上一步的静态扫描结果如下：\n\n{{scan.text}}\n\n请用 Read/Grep 工具抽查严重度最高的 3 条，判断是真问题还是误报。\n最多读 4 个文件，然后必须给出结论。\n\n输出格式：\n- 真问题：文件:行号 — 原因\n- 误报：规则id — 为什么\n- 一句话总结",
+      "maxSteps": 6,
+      "config": {
+        "allowedTools": "Read,Glob,Grep"
+      }
+    },
+    {
+      "id": "report",
+      "agent": "dsh",
+      "dependsOn": [
+        "scan",
+        "claude"
+      ],
+      "config": {
+        "model": "deepseek-chat"
+      },
+      "systemPrompt": "你是一名技术负责人，负责把不同来源的审查意见合并成一份可直接发给团队的报告。只做归纳，不要再去查代码。",
+      "prompt": "把下面两份结论合并成一份简短的 Markdown 报告。\n\n## 静态扫描\n{{scan.text}}\n\n## Claude Code 复核\n{{claude.text}}\n\n要求：\n- 先给一句话结论；\n- 列出确认要修的问题（去重）；\n- 单列一段「误报」；\n- 判断标准：{{input.目标}}",
+      "maxSteps": 3
+    }
+  ]
+}

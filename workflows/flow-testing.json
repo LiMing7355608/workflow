@@ -1,0 +1,30 @@
+{
+  "name": "testing",
+  "description": "代码 → 生成测试 → 执行。执行节点用 Agent 的 run_code 工具真实跑测试，失败会带着日志回到下一轮。",
+  "workdir": "../src",
+  "defaults": {
+    "retry": { "attempts": 2, "delayMs": 1500, "backoff": true }
+  },
+  "input": {
+    "范围": "core 目录下的工作流引擎"
+  },
+  "nodes": [
+    {
+      "id": "testgen",
+      "agent": "playfulcode",
+      "config": { "tools": "default" },
+      "systemPrompt": "你是一名测试工程师。你写测试，不改被测代码。",
+      "prompt": "为 {{input.范围}} 生成测试。\n\n流程：\n1. 先 list_files / read_file 搞清楚被测模块的公开接口和边界条件；\n2. 用项目已有的测试风格写测试文件（不要引入新的测试框架）；\n3. 覆盖：正常路径、边界值、失败路径；\n4. 输出：新增了哪些测试文件、每个文件覆盖了什么。\n\n注意：如果发现被测代码有明显 bug，**不要改它**，在输出里单列一段「疑似缺陷」。",
+      "maxSteps": 16
+    },
+    {
+      "id": "testrun",
+      "agent": "playfulcode",
+      "dependsOn": ["testgen"],
+      "config": { "tools": "default" },
+      "systemPrompt": "你是一名测试执行者。你负责跑测试并如实汇报结果，不掩盖失败。",
+      "prompt": "上一步生成了这些测试：\n\n{{testgen.text}}\n\n请实际执行测试（用 run_code 跑项目的测试命令，例如 `npm test` 或 `node --test`）。\n\n输出：\n1. 执行命令；\n2. 原始结果摘要（通过 / 失败 数量）；\n3. 每个失败的用例：断言信息 + 你的判断（是测试写错了，还是代码真有 bug）；\n4. 是否允许继续（一句话）。\n\n如果测试根本没跑起来（命令不存在、依赖缺失），直接说明原因，不要假装通过。",
+      "maxSteps": 10
+    }
+  ]
+}
